@@ -121,7 +121,7 @@ This document tracks feature parity between IronClaw (Rust implementation) and O
 | `doctor` | ✅ | ❌ | P2 | Diagnostics |
 | `logs` | ✅ | ❌ | P3 | Query logs |
 | `update` | ✅ | ❌ | P3 | Self-update |
-| `completion` | ✅ | ❌ | P3 | Shell completion |
+| `completion` | ✅ | ✅ | - | Shell completion |
 
 ### Owner: _Unassigned_
 
