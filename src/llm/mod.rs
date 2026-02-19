@@ -95,11 +95,16 @@ fn create_openai_provider(config: &LlmConfig) -> Result<Arc<dyn LlmProvider>, Ll
 
     use rig::providers::openai;
 
-    let client: openai::Client =
-        openai::Client::new(oai.api_key.expose_secret()).map_err(|e| LlmError::RequestFailed {
+    // Use CompletionsClient (Chat Completions API) instead of the default Client
+    // (Responses API). The Responses API path in rig-core panics when tool results
+    // are sent back because ironclaw doesn't thread `call_id` through its ToolCall
+    // type. The Chat Completions API works correctly with the existing code.
+    let client: openai::CompletionsClient = openai::Client::new(oai.api_key.expose_secret())
+        .map_err(|e| LlmError::RequestFailed {
             provider: "openai".to_string(),
             reason: format!("Failed to create OpenAI client: {}", e),
-        })?;
+        })?
+        .completions_api();
 
     let model = client.completion_model(&oai.model);
     tracing::info!("Using OpenAI direct API (model: {})", oai.model);
@@ -209,9 +214,11 @@ fn create_openai_compatible_provider(config: &LlmConfig) -> Result<Arc<dyn LlmPr
             reason: format!("Failed to create OpenAI-compatible client: {}", e),
         })?;
 
-    let model = client.completion_model(&compat.model);
+    // OpenAI-compatible providers (e.g. OpenRouter) are most reliable on Chat Completions.
+    // This avoids Responses-API-specific assumptions such as required tool call IDs.
+    let model = client.completions_api().completion_model(&compat.model);
     tracing::info!(
-        "Using OpenAI-compatible endpoint (base_url: {}, model: {})",
+        "Using OpenAI-compatible endpoint via Chat Completions API (base_url: {}, model: {})",
         compat.base_url,
         compat.model
     );
