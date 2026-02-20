@@ -52,6 +52,15 @@ use ironclaw::secrets::PostgresSecretsStore;
 use ironclaw::secrets::SecretsCrypto;
 #[cfg(any(feature = "postgres", feature = "libsql"))]
 use ironclaw::setup::{SetupConfig, SetupWizard};
+
+fn init_cli_logging() {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
+        )
+        .init();
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -59,41 +68,19 @@ async fn main() -> anyhow::Result<()> {
     // Handle non-agent commands first (they don't need full setup)
     match &cli.command {
         Some(Command::Tool(tool_cmd)) => {
-            // Simple logging for CLI commands
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return run_tool_command(tool_cmd.clone()).await;
         }
         Some(Command::Config(config_cmd)) => {
-            // Config commands need DB access for settings
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return ironclaw::cli::run_config_command(config_cmd.clone()).await;
         }
         Some(Command::Mcp(mcp_cmd)) => {
-            // Simple logging for MCP commands
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return run_mcp_command(mcp_cmd.clone()).await;
         }
         Some(Command::Memory(mem_cmd)) => {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
+            init_cli_logging();
 
             // Memory commands need database (and optionally embeddings)
             let config = Config::from_env()
@@ -147,49 +134,23 @@ async fn main() -> anyhow::Result<()> {
                 .await;
         }
         Some(Command::Pairing(pairing_cmd)) => {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return run_pairing_command(pairing_cmd.clone()).map_err(|e| anyhow::anyhow!("{}", e));
         }
         Some(Command::Service(service_cmd)) => {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return run_service_command(service_cmd);
         }
         Some(Command::Doctor) => {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return ironclaw::cli::run_doctor_command().await;
         }
         Some(Command::Status) => {
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return run_status_command().await;
         }
         Some(Command::Completion(completion)) => {
-            // Simple logging for CLI commands
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")),
-                )
-                .init();
-
+            init_cli_logging();
             return completion.run();
         }
         Some(Command::Worker {
